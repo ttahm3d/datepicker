@@ -87,14 +87,14 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     );
 
     return (
-      <div className="grid grid-cols-3 gap-2 p-4 bg-white rounded shadow">
+      <div className="absolute top-24 w-56 h-56 grid grid-cols-3 gap-2 p-4 bg-white rounded shadow z-20">
         {months.map((monthDate, idx) => (
           <button
             key={idx}
             className={`p-2 rounded ${
               monthDate.getMonth() === selectedMonth.getMonth()
                 ? "bg-purple-600 text-white"
-                : "hover:bg-purple-500"
+                : "hover:bg-purple-300"
             }`}
             onClick={() => {
               setCurrentMonth(monthDate);
@@ -109,17 +109,17 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   const renderYearGrid = (selectedYear: number) => {
     const startYear = selectedYear - 10;
-    const years = Array.from({ length: 21 }, (_, i) => startYear + i);
+    const years = Array.from({ length: 12 }, (_, i) => startYear + i);
 
     return (
-      <div className="grid grid-cols-4 gap-2 p-4 bg-white rounded shadow">
+      <div className="absolute w-56 h-56 t-24 grid grid-cols-3 gap-2 p-4 bg-white rounded shadow z-20">
         {years.map((year) => (
           <button
             key={year}
             className={`p-2 rounded ${
               year === currentMonth.getFullYear()
                 ? "bg-purple-600 text-white"
-                : "hover:bg-purple-500"
+                : "hover:bg-purple-300"
             }`}
             onClick={() => {
               const newDate = new Date(currentMonth);
@@ -139,13 +139,19 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
       <div className="flex justify-center items-center mb-4">
         <h2 className="text-lg font-semibold">
           <span
-            className="cursor-pointer hover:text-purple-600 mr-1"
-            onClick={() => setPickerType("month")}>
+            className="relative cursor-pointer hover:text-purple-600 mr-1"
+            onClick={() => {
+              if (pickerType === null) setPickerType("month");
+              else setPickerType(null);
+            }}>
             {format(month, "MMMM")}
           </span>
           <span
-            className="cursor-pointer hover:text-purple-600"
-            onClick={() => setPickerType("year")}>
+            className="relative cursor-pointer hover:text-purple-600"
+            onClick={() => {
+              if (pickerType === null) setPickerType("year");
+              else setPickerType(null);
+            }}>
             {format(month, "yyyy")}
           </span>
         </h2>
@@ -293,95 +299,96 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
         </svg>
       </div>
 
-      {isOpen &&
-        (pickerType === "month" ? (
-          renderMonthGrid(currentMonth)
-        ) : pickerType === "year" ? (
-          renderYearGrid(currentMonth.getFullYear())
-        ) : (
-          <div
-            className={`absolute z-10 mt-2 p-4 bg-white border border-gray-200 rounded-md shadow-lg ${
-              numberOfMonths === 3 ? "w-full md:w-auto" : "w-full md:w-auto"
-            }`}>
-            {pickerType === "month" && renderMonthGrid(currentMonth)}
-            <div className="flex justify-between items-center mb-4">
-              <button
-                onClick={prevMonth}
-                className="p-2 rounded-md hover:bg-gray-100"
-                type="button">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-              <h2 className="text-lg font-semibold">
-                {format(monthsToDisplay[0], "MMM yyyy")} -{" "}
-                {format(monthsToDisplay[numberOfMonths - 1], "MMM yyyy")}
-              </h2>
-              <button
-                onClick={nextMonth}
-                className="p-2 rounded-md hover:bg-gray-100"
-                type="button">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div
-              className={`grid ${
-                numberOfMonths === 3
-                  ? "grid-cols-1 md:grid-cols-3 gap-4"
-                  : "grid-cols-1 md:grid-cols-2 gap-4"
-              }`}>
-              {monthsToDisplay.map((month, index) => (
-                <div key={index} className="month-calendar">
-                  {renderHeader(month)}
-                  {renderDaysOfWeek()}
-                  {renderCells(month)}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 border-t pt-3 flex justify-between">
-              <button
-                onClick={() => {
-                  setDateRange({ startDate: null, endDate: null });
-                  if (onChange) onChange({ startDate: null, endDate: null });
-                }}
-                className="text-sm text-red-500 hover:text-red-700"
-                type="button">
-                Clear
-              </button>
-
-              <button
-                onClick={() => setIsOpen(false)}
-                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
-                type="button">
-                Close
-              </button>
-            </div>
+      {isOpen && (
+        // (pickerType === "month" ? (
+        //   renderMonthGrid(currentMonth)
+        // ) : pickerType === "year" ? (
+        //   renderYearGrid(currentMonth.getFullYear())
+        // ) :
+        <div
+          className={`absolute z-10 mt-2 p-4 bg-white border border-gray-200 rounded-md shadow-lg ${
+            numberOfMonths === 3 ? "w-full md:w-auto" : "w-full md:w-auto"
+          }`}>
+          {pickerType === "month" && renderMonthGrid(currentMonth)}
+          {pickerType === "year" && renderYearGrid(currentMonth.getFullYear())}
+          <div className="flex justify-between items-center mb-4">
+            <button
+              onClick={prevMonth}
+              className="p-2 rounded-md hover:bg-gray-100"
+              type="button">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <h2 className="text-lg font-semibold">
+              {format(monthsToDisplay[0], "MMM yyyy")} -{" "}
+              {format(monthsToDisplay[numberOfMonths - 1], "MMM yyyy")}
+            </h2>
+            <button
+              onClick={nextMonth}
+              className="p-2 rounded-md hover:bg-gray-100"
+              type="button">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
           </div>
-        ))}
+
+          <div
+            className={`grid ${
+              numberOfMonths === 3
+                ? "grid-cols-1 md:grid-cols-3 gap-4"
+                : "grid-cols-1 md:grid-cols-2 gap-4"
+            }`}>
+            {monthsToDisplay.map((month, index) => (
+              <div key={index} className="month-calendar">
+                {renderHeader(month)}
+                {renderDaysOfWeek()}
+                {renderCells(month)}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 border-t pt-3 flex justify-between">
+            <button
+              onClick={() => {
+                setDateRange({ startDate: null, endDate: null });
+                if (onChange) onChange({ startDate: null, endDate: null });
+              }}
+              className="text-sm text-red-500 hover:text-red-700"
+              type="button">
+              Clear
+            </button>
+
+            <button
+              onClick={() => setIsOpen(false)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+              type="button">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
