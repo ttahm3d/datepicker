@@ -11,6 +11,7 @@ import {
   isSameMonth,
   isSameDay,
   isWithinInterval,
+  getWeek,
 } from "date-fns";
 
 type DateRange = {
@@ -22,12 +23,16 @@ interface DateRangePickerProps {
   initialDateRange?: DateRange;
   onChange?: (dateRange: DateRange) => void;
   numberOfMonths?: 2 | 3; // Only allow 2 or 3 months
+  showWeekNumbers?: boolean; // Optional prop to show week numbers
+  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6; // Optional prop to set the start day of the week (0 = Sunday, 1 = Monday, etc.)
 }
 
 const DateRangePicker: React.FC<DateRangePickerProps> = ({
   initialDateRange = { startDate: null, endDate: null },
   onChange,
-  numberOfMonths = 2, // Default to 2 months
+  numberOfMonths = 2,
+  showWeekNumbers = false,
+  weekStartsOn = 0, // Default to Sunday
 }) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [dateRange, setDateRange] = useState<DateRange>(initialDateRange);
@@ -112,7 +117,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     const years = Array.from({ length: 12 }, (_, i) => startYear + i);
 
     return (
-      <div className="absolute w-56 h-56 t-24 grid grid-cols-3 gap-2 p-4 bg-white rounded shadow z-20">
+      <div className="absolute w-56 h-56 top-24 grid grid-cols-3 gap-2 p-4 bg-white rounded shadow z-20">
         {years.map((year) => (
           <button
             key={year}
@@ -161,9 +166,18 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   const renderDaysOfWeek = () => {
     const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+    const orderedWeekDays = [
+      ...weekDays.slice(weekStartsOn),
+      ...weekDays.slice(0, weekStartsOn),
+    ];
     return (
-      <div className="grid grid-cols-7 mb-2">
-        {weekDays.map((day) => (
+      <div className={`grid grid-cols-${showWeekNumbers ? 8 : 7} mb-2`}>
+        {showWeekNumbers && (
+          <div className="text-center text-sm font-medium text-gray-500 py-1">
+            #
+          </div>
+        )}
+        {orderedWeekDays.map((day) => (
           <div
             key={day}
             className="text-center text-sm font-medium text-gray-500 py-1">
@@ -177,17 +191,32 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const renderCells = (month: Date) => {
     const monthStart = startOfMonth(month);
     const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart);
-    const endDate = endOfWeek(monthEnd);
+    const startDate = startOfWeek(monthStart, { weekStartsOn });
+    const endDate = endOfWeek(monthEnd, { weekStartsOn });
 
-    const dateRange = eachDayOfInterval({
-      start: startDate,
-      end: endDate,
-    });
+    const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
+    const weeks = [];
+
+    // Split dates into weeks
+    while (dateRange.length > 0) {
+      weeks.push(dateRange.splice(0, 7));
+    }
 
     return (
-      <div className="grid grid-cols-7 gap-y-1">
-        {dateRange.map((day, i) => renderCell(day, i, month))}
+      <div className={`grid grid-cols-${showWeekNumbers ? 8 : 7} gap-y-1`}>
+        {weeks.map((weekDates, weekIndex) => {
+          const weekNumber = getWeek(weekDates[0]);
+          return (
+            <React.Fragment key={weekIndex}>
+              {showWeekNumbers ? (
+                <div className="h-8 flex items-center justify-center text-xs text-gray-500 border-r">
+                  {weekNumber}
+                </div>
+              ) : null}
+              {weekDates.map((day, i) => renderCell(day, i, month))}
+            </React.Fragment>
+          );
+        })}
       </div>
     );
   };
@@ -413,6 +442,8 @@ const App: React.FC = () => {
       <DateRangePicker
         initialDateRange={dateRange}
         onChange={handleDateRangeChange}
+        weekStartsOn={1}
+        showWeekNumbers={true}
         numberOfMonths={2} // Change to 3 if you want to show 3 months
       />
 
