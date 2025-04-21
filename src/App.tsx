@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   format,
   addMonths,
@@ -171,7 +171,10 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
       ...weekDays.slice(0, weekStartsOn),
     ];
     return (
-      <div className={`grid grid-cols-${showWeekNumbers ? 8 : 7} mb-2`}>
+      <div
+        className={`grid ${
+          showWeekNumbers ? "grid-cols-8" : "grid-cols-7"
+        } mb-2`}>
         {showWeekNumbers && (
           <div className="text-center text-sm font-medium text-gray-500 py-1">
             #
@@ -188,38 +191,44 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     );
   };
 
-  const renderCells = (month: Date) => {
-    const monthStart = startOfMonth(month);
-    const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart, { weekStartsOn });
-    const endDate = endOfWeek(monthEnd, { weekStartsOn });
+  const renderCells = useCallback(
+    (month: Date) => {
+      const monthStart = startOfMonth(month);
+      const monthEnd = endOfMonth(monthStart);
+      const startDate = startOfWeek(monthStart, { weekStartsOn });
+      const endDate = endOfWeek(monthEnd, { weekStartsOn });
 
-    const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
-    const weeks = [];
+      const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
+      const weeks = [];
 
-    // Split dates into weeks
-    while (dateRange.length > 0) {
-      weeks.push(dateRange.splice(0, 7));
-    }
+      // Split dates into weeks
+      while (dateRange.length > 0) {
+        weeks.push(dateRange.splice(0, 7));
+      }
 
-    return (
-      <div className={`grid grid-cols-${showWeekNumbers ? 8 : 7} gap-y-1`}>
-        {weeks.map((weekDates, weekIndex) => {
-          const weekNumber = getWeek(weekDates[0]);
-          return (
-            <React.Fragment key={weekIndex}>
-              {showWeekNumbers ? (
-                <div className="h-8 flex items-center justify-center text-xs text-gray-500 border-r">
-                  {weekNumber}
-                </div>
-              ) : null}
-              {weekDates.map((day, i) => renderCell(day, i, month))}
-            </React.Fragment>
-          );
-        })}
-      </div>
-    );
-  };
+      return (
+        <div
+          className={`grid ${
+            showWeekNumbers ? "grid-cols-8" : "grid-cols-7"
+          } gap-y-1`}>
+          {weeks.map((weekDates, weekIndex) => {
+            const weekNumber = getWeek(weekDates[0], { weekStartsOn });
+            return (
+              <React.Fragment key={weekIndex}>
+                {showWeekNumbers ? (
+                  <div className="h-8 flex items-center justify-center text-xs text-gray-500 border-r">
+                    {weekNumber}
+                  </div>
+                ) : null}
+                {weekDates.map((day, i) => renderCell(day, i, month))}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      );
+    },
+    [showWeekNumbers, weekStartsOn]
+  );
 
   const isInRange = (day: Date) => {
     if (!dateRange.startDate) return false;
