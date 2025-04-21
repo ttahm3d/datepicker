@@ -67,17 +67,7 @@ const App: React.FC = () => {
           </select>
         </label>
       </div>
-      {/* <DateRangePicker
-        initialDateRange={dateRange}
-        onChange={handleDateRangeChange}
-        weekStartsOn={
-          options.weekStartsOn as DateRangePickerProps["weekStartsOn"]
-        }
-        showWeekNumbers={options.showWeekNumbers}
-        numberOfMonths={
-          options.numberOfMonths as DateRangePickerProps["numberOfMonths"]
-        } // Change to 3 if you want to show 3 months
-      /> */}
+
       <Daterange
         initialDateRange={dateRange}
         onChange={handleDateRangeChange}
@@ -87,7 +77,9 @@ const App: React.FC = () => {
         showWeekNumbers={options.showWeekNumbers}
         numberOfMonths={
           options.numberOfMonths as DateRangePickerProps["numberOfMonths"]
-        } // Change to 3 if you want to show 3 months
+        }
+        highlightFullWeekOnHover
+        defaultToWeekStartAndEndDates
       />
 
       {dateRange.startDate && dateRange.endDate && (

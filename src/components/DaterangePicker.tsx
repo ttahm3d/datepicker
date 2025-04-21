@@ -25,6 +25,8 @@ export interface DateRangePickerProps {
   numberOfMonths?: 2 | 3; // Only allow 2 or 3 months
   showWeekNumbers?: boolean; // Optional prop to show week numbers
   weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6; // Optional prop to set the start day of the week (0 = Sunday, 1 = Monday, etc.)
+  highlightFullWeekOnHover?: boolean; // Default to false
+  defaultToWeekStartAndEndDates?: boolean; // Default to false
 }
 
 const DateRangePicker: React.FC<DateRangePickerProps> = ({
@@ -33,28 +35,39 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   numberOfMonths = 2,
   showWeekNumbers = false,
   weekStartsOn = 0, // Default to Sunday
+  highlightFullWeekOnHover = false,
+  defaultToWeekStartAndEndDates = false,
 }) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [dateRange, setDateRange] = useState<DateRange>(initialDateRange);
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [pickerType, setPickerType] = useState<"month" | "year" | null>(null);
+  const [hoveredWeek, setHoveredWeek] = useState<Date[] | null>(null); // Track the hovered week
 
   const handleDateClick = (day: Date) => {
     const newDateRange = { ...dateRange };
 
     if (!dateRange.startDate || dateRange.endDate) {
       // Set start date if not set or if both dates are already set (start new selection)
-      newDateRange.startDate = day;
+      newDateRange.startDate = defaultToWeekStartAndEndDates
+        ? startOfWeek(day, { weekStartsOn })
+        : day;
       newDateRange.endDate = null;
     } else {
       // If start date is before clicked day, set end date
       if (day > dateRange.startDate) {
-        newDateRange.endDate = day;
+        newDateRange.endDate = defaultToWeekStartAndEndDates
+          ? endOfWeek(day, { weekStartsOn })
+          : day;
       } else {
         // If clicked before start date, swap dates
-        newDateRange.endDate = newDateRange.startDate;
-        newDateRange.startDate = day;
+        newDateRange.endDate = defaultToWeekStartAndEndDates
+          ? endOfWeek(day, { weekStartsOn })
+          : day;
+        newDateRange.startDate = defaultToWeekStartAndEndDates
+          ? startOfWeek(day, { weekStartsOn })
+          : day;
       }
     }
 
@@ -71,10 +84,25 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   const handleMouseEnter = (day: Date) => {
     setHoverDate(day);
+
+    if (highlightFullWeekOnHover) {
+      const startOfHoveredWeek = startOfWeek(day, { weekStartsOn });
+      const endOfHoveredWeek = endOfWeek(day, { weekStartsOn });
+      const week = eachDayOfInterval({
+        start: startOfHoveredWeek,
+        end: endOfHoveredWeek,
+      });
+      setHoveredWeek(week);
+    }
   };
 
   const handleMouseLeave = () => {
     setHoverDate(null);
+    setHoveredWeek(null); // Clear the hovered week
+  };
+
+  const isInHoveredWeek = (day: Date) => {
+    return hoveredWeek?.some((hoveredDay) => isSameDay(day, hoveredDay));
   };
 
   const nextMonth = () => {
@@ -215,7 +243,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           return (
             <React.Fragment key={weekIndex}>
               {showWeekNumbers ? (
-                <div className="h-8 flex items-center justify-center text-xs text-gray-500 border-r">
+                <div className="h-8 flex items-center justify-center text-xs text-gray-500">
                   {weekNumber}
                 </div>
               ) : null}
@@ -251,6 +279,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     const isToday = isSameDay(day, new Date());
     const isCurrentMonth = isSameMonth(day, currentMonthView);
     const inDateRange = isInRange(day);
+    const inHoveredWeek = highlightFullWeekOnHover && isInHoveredWeek(day);
 
     let classes = "h-8 w-8 flex items-center justify-center";
 
@@ -269,6 +298,8 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     } else if (isEndDate) {
       classes += " bg-purple-600 text-white rounded-tr-lg rounded-br-lg";
     } else if (inDateRange) {
+      classes += " bg-purple-200 ";
+    } else if (inHoveredWeek) {
       classes += " bg-purple-200 ";
     }
 
